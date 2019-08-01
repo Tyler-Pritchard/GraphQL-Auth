@@ -1,6 +1,7 @@
 'use strict';
 
 var bind = require('./helpers/bind');
+var isBuffer = require('is-buffer');
 
 /*global toString:true*/
 
@@ -175,13 +176,19 @@ function trim(str) {
  *  typeof document -> undefined
  *
  * react-native:
- *  typeof document.createElement -> undefined
+ *  navigator.product -> 'ReactNative'
+ * nativescript
+ *  navigator.product -> 'NativeScript' or 'NS'
  */
 function isStandardBrowserEnv() {
+  if (typeof navigator !== 'undefined' && (navigator.product === 'ReactNative' ||
+                                           navigator.product === 'NativeScript' ||
+                                           navigator.product === 'NS')) {
+    return false;
+  }
   return (
     typeof window !== 'undefined' &&
-    typeof document !== 'undefined' &&
-    typeof document.createElement === 'function'
+    typeof document !== 'undefined'
   );
 }
 
@@ -204,7 +211,7 @@ function forEach(obj, fn) {
   }
 
   // Force an array if not already something iterable
-  if (typeof obj !== 'object' && !isArray(obj)) {
+  if (typeof obj !== 'object') {
     /*eslint no-param-reassign:0*/
     obj = [obj];
   }
@@ -258,6 +265,32 @@ function merge(/* obj1, obj2, obj3, ... */) {
 }
 
 /**
+ * Function equal to merge with the difference being that no reference
+ * to original objects is kept.
+ *
+ * @see merge
+ * @param {Object} obj1 Object to merge
+ * @returns {Object} Result of all merge properties
+ */
+function deepMerge(/* obj1, obj2, obj3, ... */) {
+  var result = {};
+  function assignValue(val, key) {
+    if (typeof result[key] === 'object' && typeof val === 'object') {
+      result[key] = deepMerge(result[key], val);
+    } else if (typeof val === 'object') {
+      result[key] = deepMerge({}, val);
+    } else {
+      result[key] = val;
+    }
+  }
+
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+
+/**
  * Extends object a by mutably adding to it the properties of object b.
  *
  * @param {Object} a The object to be extended
@@ -279,6 +312,7 @@ function extend(a, b, thisArg) {
 module.exports = {
   isArray: isArray,
   isArrayBuffer: isArrayBuffer,
+  isBuffer: isBuffer,
   isFormData: isFormData,
   isArrayBufferView: isArrayBufferView,
   isString: isString,
@@ -294,6 +328,7 @@ module.exports = {
   isStandardBrowserEnv: isStandardBrowserEnv,
   forEach: forEach,
   merge: merge,
+  deepMerge: deepMerge,
   extend: extend,
   trim: trim
 };
