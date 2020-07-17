@@ -36,7 +36,7 @@
     "graphql": "^0.13.2",
     "graphql-tag": "^1.3.2",
     "html-webpack-plugin": "^2.26.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mongo": "^0.1.0",
     "mongo-client": "^0.2.1",
     "mongoclient": "^1.0.3",
